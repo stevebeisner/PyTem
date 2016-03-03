@@ -6,3 +6,6 @@ clean:
 demo:
 	@python pytem_demo.py
 
+sdist:
+	@python setup.py sdist --formats=zip
+
