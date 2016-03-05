@@ -8,8 +8,8 @@ from io import StringIO
 
 __all__ = [ 'PyTem' ]
 
-DBG_CACHE             = 0x8000    # Trace caching of compiled templates.
 DBG_CODE              = 0x4000    # Dump intermediate (python source for template) to stderr.
+DBG_BASE              = 0x0100    # Minor messages.
 debug_mask = 0
 def dbg( bits, msg):
   if debug_mask & bits:
@@ -27,13 +27,17 @@ def build_env(*kv_dicts, **kv_vars):
 
 
 class PyTem:
-    def __init__(self, search_path = ['.'], debug = 0):
+    def __init__(self, search_path = ['.'], debug = 0, pyfile = False):
         global debug_mask
         debug_mask = debug
         self.search_path = (search_path 
                               if '.' in search_path
                               else search_path + ['.'])
+        self.pyfile = pyfile
+        dbg(DBG_BASE, "search_path %r, pyfile %r, debug 0x%04x" % 
+                      (self.search_path,self.pyfile,debug_mask))
         self.compiled_cache = {}
+
 
 
     def _get_input_path_and_file(self, infilename):
@@ -107,24 +111,27 @@ class PyTem:
               break
 
         else:
-          linelist = [ "print(" ]
+          line_pieces = []
           while True:
             mo = re.search( r'^(.*?)<%(.*?)%>(.*)$', line)
             if mo==None:
               #errout("no more holes")
               break
-            #errout(pre: %r then hole: %r" % (mo.group(1),mo.group(2)))
-            linelist.append( "%r+str(eval(%r))+" % (mo.group(1),mo.group(2)))
-            #linelist.append( "%r+str(eval(%r,globals(),locals()))+" % (mo.group(1),mo.group(2)))
+            if mo.group(1): line_pieces.append( repr(mo.group(1)) )
+            line_pieces.append( 'str(eval(%r))' % (mo.group(2),))
             line = mo.group(3)
 
-          linelist.append( "%r)\n" % line)
-          line = str.join('', linelist)
-          outlines.append( ' '*indent + line)
+          if line: line_pieces.append( repr(line) )
+          line = str.join('+', line_pieces)
+          outlines.append( ' '*indent + 'print(' + line + ')\n')
 
         dbg(DBG_CODE, ("%4d %s" %  (line_num, outlines[-1].rstrip())))
 
-      return compile( str.join('',outlines), infilename, 'exec')
+      py = str.join('',outlines)
+      if self.pyfile:
+        with open(infilename+'.py','w') as f:
+          f.write(py)
+      return compile( py, infilename, 'exec')
 
     def compileFile(self,infilename):
       '''
@@ -136,7 +143,7 @@ class PyTem:
       Returns a code_object (compiled python code).
       '''
       if infilename in self.compiled_cache:
-        dbg(DBG_CACHE, "Using cached template for %r" % infilename)
+        dbg(DBG_BASE, "Using cached template for %r" % infilename)
         return self.compiled_cache[infilename]
       (input_path, infile) = self._get_input_path_and_file(infilename)
       text = infile.read()
@@ -170,22 +177,21 @@ class PyTem:
 
     def expandFile(self, infilename, *kv_dicts, **kv_vars):
       "Convenience function: combines compileFile and expand."
+      dbg(DBG_BASE, "expandFile %r." % infilename)
       code_object = self.compileFile(infilename)
       return self.expand( code_object, *kv_dicts, **kv_vars)
 
 
     def expandString(self, 
-        template_string,   #[ infilename,]
+        template_string,   infilename,
         *kv_dicts,         **kv_vars):
       '''
-      Convenience function: combines compileString and expand. 
-      NOTE: The infilename argument is optional !!!
+      Convenience function: combines compileString and expand.
+        template_string
+        infilename
+        kv_dicts            dictionaries
+        kv_vars             individual key/value pairs
       '''
-      kv_dicts = list(kv_dicts)
-      if kv_dicts and isinstance(kv_dicts[0],str):
-          infilename = kv_dicts.pop(0)
-      else:
-          infilename = "<string>"
       code_object = self.compileString(template_string, infilename)
       return self.expand( code_object, *kv_dicts, **kv_vars)
 
@@ -200,13 +206,15 @@ def usage(msg=''):
   sys.stderr.write("Options\n")
   sys.stderr.write("  (-s | --search_path)  path1,path2,...\n")
   sys.stderr.write("  (-d | --debug)        debug mask bits\n")
-  sys.stderr.write("                        0x8000  Trace caching, compiled templates\n")
   sys.stderr.write("                        0x4000  Show python source\n")
   sys.stderr.write("                                for compiled templates.\n")
-  sys.stderr.write("  (-e | --env)          Env file name\n")
+  sys.stderr.write("                        0x0100  Minor messages\n")
+  sys.stderr.write("  (-e | --env)          (REQUIRED) Env file name\n")
   sys.stderr.write("                        File contains a python dictionary\n")
   sys.stderr.write("  (-i | --in)           In file name\n")
   sys.stderr.write("  (-o | --out)          Out file name. Defaults to '<stdout>'\n")
+  sys.stderr.write("  -p                    If specified, output compiled (python)\n")
+  sys.stderr.write("                        to this file.\n")
   sys.exit(1)
     
 def run():
@@ -220,8 +228,10 @@ def run():
 
   debug = 0
   search_path = ['.']
+  envfilename = None
   infilename = '<stdin>'
   outfilename = '<stdout>'
+  pyfile = False
 
   if( len(args) == 0):
     usage()
@@ -240,20 +250,23 @@ def run():
         infilename = args.pop(0)
     elif arg == '-o' or arg == '--out':
         outfilename = args.pop(0)
+    elif arg == '-p':
+        pyfile = True
     else:
         usage("Unrecognized command line argument, %r" % (arg,))
 
+  if envfilename == None: usage("Missing -env option.");
 
   with open(envfilename,'r') as f:
     s = f.read()
   env = eval(s)
-  errout("env is %r", env)
+  #errout("env is %r" % env)
 
   outfile = ( sys.stdout
               if outfilename == '<stdout>'
               else open(outfilename, 'w'))
 
-  pt = PyTem( search_path, debug )
+  pt = PyTem( pyfile=pyfile, search_path=search_path, debug=debug )
   s = pt.expandFile( infilename, env)
   outfile.write(s)
   outfile.close()

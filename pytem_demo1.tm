@@ -23,6 +23,6 @@ dick is <%dick%>, tom is <% tom %>.
 mel is <% mel %>, steve is <% steve %>.
 %end
 %end
-<%include_template('pytem_demo_incl.txt', sally='Ride')%>
+<%include_template('pytem_demo1_incl.tm', sally='Ride')%>
 Line with a numeric expr: <%100 * 123%>. That's what!
 This is the last line.
