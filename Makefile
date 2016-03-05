@@ -7,7 +7,7 @@ help:
 	@echo "		demo3           Test"
 	@echo "		demo4           Test"
 	@echo "		sdist           Build a pypi distribution."
-	@echo "   register_sdict  Register (1st time) and upload (all times) with pypi"
+	@echo "   register_sdist  Register (1st time) and upload (all times) with pypi"
 	@echo
 
 
@@ -15,7 +15,7 @@ help:
 clean:
 	@rm -f *.out
 	@rm -f *.tm.py
-	@rm -f README.html
+	@rm -f README.html README.txt
 	@rm -rf __pycache__
 
 demo1: clean
@@ -30,12 +30,13 @@ demo3: clean
 demo4: clean
 	@python pytem_demo4.py
 
-sdist:
+sdist: clean
+	@pandoc -s README.md -o README.txt
 	@python setup.py check
 	@python setup.py sdist --formats=zip
 
 #Initial registration with pypi:
-register_sdict:
+register_sdist:
 	python setup.py register sdist upload
 
 

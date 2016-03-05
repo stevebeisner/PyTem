@@ -2,12 +2,12 @@ from distutils.core import setup
 setup(
     name = "PyTem",
     py_modules=['pytem'],
-    version = "0.0.6",
+    version = "0.0.7",
     description = "Python-Server-Pages-like Templates",
     author = "Steve Beisner",
     author_email = "beisner@alum.mit.edu",
     url = "https://github.com/stevebeisner/PyTem",
-    download_url = "https://github.com/stevebeisner/PyTem/archive/master.zip"
+    download_url = "https://github.com/stevebeisner/PyTem/archive/master.zip",
     keywords = ["templates", "python server pages"],
     classifiers = [
         "Programming Language :: Python :: 3 :: Only",
