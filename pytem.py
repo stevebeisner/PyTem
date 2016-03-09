@@ -27,16 +27,21 @@ def build_env(*kv_dicts, **kv_vars):
 
 
 class PyTem:
-    def __init__(self, search_path = ['.'], debug = 0, pyfile = False):
+    def __init__(self, search_path = ['.'], debug = 0, pyfile = False,  env={}):
         global debug_mask
         debug_mask = debug
         self.search_path = (search_path 
                               if '.' in search_path
                               else search_path + ['.'])
         self.pyfile = pyfile
-        dbg(DBG_BASE, "search_path %r, pyfile %r, debug 0x%04x" % 
-                      (self.search_path,self.pyfile,debug_mask))
+
         self.compiled_cache = {}
+
+        self.env = {}
+        self.env.update(env)
+
+        dbg(DBG_BASE, "search_path %r, pyfile %r, debug 0x%04x, env %r" % 
+                      (self.search_path, self.pyfile, debug_mask, self.env))
 
 
 
@@ -117,9 +122,15 @@ class PyTem:
             if mo==None:
               #errout("no more holes")
               break
-            if mo.group(1): line_pieces.append( repr(mo.group(1)) )
-            line_pieces.append( 'str(eval(%r))' % (mo.group(2),))
-            line = mo.group(3)
+            pre,strg,post = mo.group(1),mo.group(2),mo.group(3)
+            if pre.endswith('\\'):    # escape a "hole"; treat as plain text
+              pre = pre[:-1]     #drop escape char
+              line_pieces.append( repr(pre + '<%' + strg + '%>') )
+              line = post
+            else:
+              if pre: line_pieces.append( repr(pre) )
+              line_pieces.append( 'str(eval(%r))' % (strg,))
+              line = post
 
           if line: line_pieces.append( repr(line) )
           line = str.join('+', line_pieces)
@@ -159,17 +170,15 @@ class PyTem:
           kv_dicts      0 or more dictionaries of key/values (variable/values).
           kv_vars       0 or more individual key/values (variable/values).
       '''
-      env = build_env( *kv_dicts, **kv_vars)
-      #errout("expand env is %r" % (env,))
+      self.env.update( build_env( *kv_dicts, **kv_vars))
       def include_template( infilename, **arg_kv_vars):
-        #errout("include_template env is %r" % (env,))
-        return self.expandFile(infilename, env, **arg_kv_vars).rstrip()
-      env['include_template'] = include_template
+        return self.expandFile(infilename, **arg_kv_vars).rstrip()
+      self.env['include_template'] = include_template
 
 
       save_stdout = sys.stdout
       sys.stdout = StringIO()
-      exec(code_object, env)
+      exec(code_object, self.env)
       s = sys.stdout.getvalue()
       sys.stdout = save_stdout
       return s
@@ -192,6 +201,7 @@ class PyTem:
         kv_dicts            dictionaries
         kv_vars             individual key/value pairs
       '''
+      dbg(DBG_BASE, "expandString %r." % infilename)
       code_object = self.compileString(template_string, infilename)
       return self.expand( code_object, *kv_dicts, **kv_vars)
 
@@ -202,19 +212,20 @@ def usage(msg=''):
   '''
   if(msg):
     sys.stderr.write(msg+'\n')
-  sys.stderr.write("Usage:  python pytem.py [options]\n")
+  sys.stderr.write("Usage:  python pytem.py [options] infile, ...\n")
   sys.stderr.write("Options\n")
-  sys.stderr.write("  (-s | --search_path)  path1,path2,...\n")
+  sys.stderr.write("  (-h | --help          This help message.\n")
   sys.stderr.write("  (-d | --debug)        debug mask bits\n")
+  sys.stderr.write("  (-s | --search_path)  path1,path2,...\n")
   sys.stderr.write("                        0x4000  Show python source\n")
   sys.stderr.write("                                for compiled templates.\n")
   sys.stderr.write("                        0x0100  Minor messages\n")
-  sys.stderr.write("  (-e | --env)          (REQUIRED) Env file name\n")
-  sys.stderr.write("                        File contains a python dictionary\n")
-  sys.stderr.write("  (-i | --in)           In file name\n")
-  sys.stderr.write("  (-o | --out)          Out file name. Defaults to '<stdout>'\n")
-  sys.stderr.write("  -p                    If specified, output compiled (python)\n")
-  sys.stderr.write("                        to this file.\n")
+  sys.stderr.write("  -p                    If true, output the compiled template (i.e. pure python)\n")
+  sys.stderr.write("                        named 'infile' to 'infile.py' for debugging.\n")
+  sys.stderr.write("  (-o | --out)          Out file name. Defaults to '<stdout>' if\n")
+  sys.stderr.write("                        not specified.\n")
+  sys.stderr.write("Expands infiles in order. Keeping environment from one to the next\n")
+  sys.stderr.write("If no infiles specified, use <stdin>.\n")
   sys.exit(1)
     
 def run():
@@ -225,11 +236,9 @@ def run():
   args.pop(0)
   errout("args list is %r" % (args,))
 
-
   debug = 0
   search_path = ['.']
-  envfilename = None
-  infilename = '<stdin>'
+  infilenames = []
   outfilename = '<stdout>'
   pyfile = False
 
@@ -238,37 +247,37 @@ def run():
 
   while len(args):
     arg = args.pop(0)
-    if arg == '-h' or arg == '--help' or arg == 'help':
-      usage()
-    elif arg == '-s' or arg == '--search_path':
-        search_path = re.split(r' *, *', args.pop())
-    elif arg == '-d' or arg == '--debug':
-        debug = int(args.pop(0),0)
-    elif arg == '-e' or arg == '--env':
-        envfilename = args.pop(0)
-    elif arg == '-i' or arg == '--in':
-        infilename = args.pop(0)
-    elif arg == '-o' or arg == '--out':
-        outfilename = args.pop(0)
-    elif arg == '-p':
-        pyfile = True
-    else:
-        usage("Unrecognized command line argument, %r" % (arg,))
+    if arg[0] == '-':       # flag argument
+      if arg == '-h' or arg == '--help':
+        usage()
+      elif arg == '-d' or arg == '--debug':
+          debug = int(args.pop(0),0)
+      elif arg == '-s' or arg == '--search_path':
+          search_path = re.split(r' *, *', args.pop())
+      elif arg == '-p':
+          pyfile = True
+      elif arg == '-o' or arg == '--out':
+          outfilename = args.pop(0)
+      else:
+          usage("Unrecognized command line argument, %r" % (arg,))
+    else:                    # non-flag argument (input file name)
+      infilenames.append( arg)
+      break
 
-  if envfilename == None: usage("Missing -env option.");
-
-  with open(envfilename,'r') as f:
-    s = f.read()
-  env = eval(s)
-  #errout("env is %r" % env)
+  while len(args):
+    infilenames.append( args.pop(0))
 
   outfile = ( sys.stdout
               if outfilename == '<stdout>'
               else open(outfilename, 'w'))
 
   pt = PyTem( pyfile=pyfile, search_path=search_path, debug=debug )
-  s = pt.expandFile( infilename, env)
-  outfile.write(s)
+  if len(infilenames) == 0:
+    outfile.write(pt.expandFile( '<stdin>'))
+  else:
+    while len(infilenames):
+      arg = infilenames.pop(0)
+      outfile.write(pt.expandFile( arg ))
   outfile.close()
 
 if __name__ == '__main__':

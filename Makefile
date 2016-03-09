@@ -1,14 +1,23 @@
 
 help:
 	@echo "Targets:"
-	@echo "		clean           Delete build/test artifacts"
-	@echo "		demo1           Test"
-	@echo "		demo2           Test"
-	@echo "		demo3           Test"
-	@echo "		demo4           Test"
-	@echo "		sdist           Build a pypi distribution."
+	@echo "   clean           Delete build/test artifacts"
+	@echo "   demo1           Test expandFile API and include_template."
+	@echo "   demo2           Test expandString."
+	@echo "   demo3           Test command line expansion of two files."
+	@echo "   demo4           Test some other expanString cases."
+	@echo "   sdist           Build a pypi distribution."
 	@echo "   register_sdist  Register (1st time) and upload (all times) with pypi"
-	@echo
+	@echo "   steve_release   Copy ./pytem.py to ../../lib/python3.5/site-packages/pytem.py"
+	@echo ""
+	@echo "In addition to 'sdict' and 'register_sdict' to release to pypi,"
+	@echo "remember to commit to git:"
+	@echo "   git status"
+	@echo "   git add './*'"
+	@echo '   git commit -a -m "latest changes'
+	@echo "   git status"
+	@echo "   git status"
+	@echo "   git status"
 
 
 
@@ -25,7 +34,7 @@ demo2: clean
 	@python pytem_demo2.py
 
 demo3: clean
-	@python pytem.py -d 0x0100 -e pytem_demo3_env.py -i pytem_demo3.tm -o pytem_demo3.out -p
+	@python pytem.py -d 0x0100 -o pytem_demo3.out -p pytem_demo3.tm pytem_demo3a.tm
 
 demo4: clean
 	@python pytem_demo4.py
@@ -40,3 +49,6 @@ register_sdist:
 	python setup.py register sdist upload
 
 
+# Local release for testing
+steve_release:
+	cp ./pytem.py  ../../lib/python3.5/site-packages/pytem.py

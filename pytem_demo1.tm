@@ -7,7 +7,7 @@ Expand "steve" and "mel":
 %#
     steve first: <%steve%>, then mel: <% mel %>
 Expand "tom" and "dick":
-    tom: <% tom %>
+    tom: \<%  tom  %>
     dick: <%dick%>
 
 %  tom = tom.upper()
