@@ -71,7 +71,7 @@ class PyTem:
       raise RuntimeError( "_get_input_path_and_file: %r not found" % infilename )
 
 
-    def compileString(self, text, infilename='<string>'):
+    def _compileString(self, text, infilename='<string>'):
       '''
       text            The lines of the template to be compiled.
       infilename      An identifier for the string being compiled.
@@ -115,6 +115,9 @@ class PyTem:
               outlines.append('\n')
               break
 
+        elif line.startswith('\\%'):       #escaped '%' at start of line.
+          outlines.append( 'print(' + repr(line[1:]) + ')\n' )
+
         else:
           line_pieces = []
           while True:
@@ -144,7 +147,7 @@ class PyTem:
           f.write(py)
       return compile( py, infilename, 'exec')
 
-    def compileFile(self,infilename):
+    def _compileFile(self,infilename):
       '''
       infilename is one of:
         '<stdin>'             Compile lines from standard input.
@@ -159,7 +162,7 @@ class PyTem:
       (input_path, infile) = self._get_input_path_and_file(infilename)
       text = infile.read()
       infile.close()
-      code_object = self.compileString(text, input_path)
+      code_object = self._compileString(text, input_path)
       self.compiled_cache[infilename] = code_object
       return code_object
 
@@ -185,25 +188,35 @@ class PyTem:
 
 
     def expandFile(self, infilename, *kv_dicts, **kv_vars):
-      "Convenience function: combines compileFile and expand."
+      "Compile a file and expand."
       dbg(DBG_BASE, "expandFile %r." % infilename)
-      code_object = self.compileFile(infilename)
+      code_object = self._compileFile(infilename)
       return self.expand( code_object, *kv_dicts, **kv_vars)
 
 
     def expandString(self, 
-        template_string,   infilename,
-        *kv_dicts,         **kv_vars):
+        template_string,
+        infilename,
+        *kv_dicts,
+        **kv_vars):
       '''
-      Convenience function: combines compileString and expand.
+      Compile a string and expand.
         template_string
         infilename
         kv_dicts            dictionaries
         kv_vars             individual key/value pairs
       '''
       dbg(DBG_BASE, "expandString %r." % infilename)
-      code_object = self.compileString(template_string, infilename)
+      code_object = self._compileString(template_string, infilename)
       return self.expand( code_object, *kv_dicts, **kv_vars)
+
+
+    def resetEnv(self, env):
+        '''
+        Reset the environment to specified env dict
+        '''
+        self.env = {}
+        self.env.update(env)
 
 
 def usage(msg=''):

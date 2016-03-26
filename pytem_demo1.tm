@@ -7,7 +7,7 @@ Expand "steve" and "mel":
 %#
     steve first: <%steve%>, then mel: <% mel %>
 Expand "tom" and "dick":
-    tom: \<%  tom  %>
+    tom: <%  tom  %>
     dick: <%dick%>
 
 %  tom = tom.upper()
@@ -25,4 +25,6 @@ mel is <% mel %>, steve is <% steve %>.
 %end
 <%include_template('pytem_demo1_incl.tm', sally='Ride')%>
 Line with a numeric expr: <%100 * 123%>. That's what!
+\% escaped line, not python
+line with \<% an escaped %> hole.
 This is the last line.

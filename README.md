@@ -1,6 +1,6 @@
 # PyTem Template Engine.
 
-### Intro: What is PyTem?
+## Intro: What is PyTem?
 
 PyTem is an implementation of a "Python-Server-Pages"-like template engine for Python 3+.
 PyTem is, 
@@ -13,19 +13,24 @@ PyTem's current status is "Alpha", but it is being used for real work on a daily
 
 PyTem can run as a standalone program from the command line, or can be imported into another Python 3 program and used via a small/simple API.
 
-### Installation
+Copyright by Steve Beisner. Uses the MIT open source license.
+
+## Installation
+
+Install as python module:
 
 ```
 pip install PyTem
 ```
 
+Project source at [https://github.com/stevebeisner/PyTem]()
 
-### Syntax of PyTem Templates
+## Syntax of PyTem Templates
 
 A PyTem template is a text file (.txt, .html, .markdown, etc.) containing, in addition the
 "normal" text appropriate to the file type, python statements and python expressions.
 
-### An Example of a PyTem Template
+## An Example of a PyTem Template
 
 Here is a file named "pytem_demo4.tm", showing python statement lines and lines containing
 pure text and python expressions.
@@ -67,7 +72,7 @@ s = pt.expandFile('pytem_demo4.tm', {'greeting': 'Hello',  'name': 'George'})
 print(s)
 ```
 
-### Including other templates
+## Including other templates
 
 Inside a template file, another template file can be included, interpreted in the same
 environment, using 
@@ -80,7 +85,7 @@ environment, using
 calling the function, "include_template".
 
 
-### PyTem API -- General Comments
+## PyTem API -- General Comments
 
 The API consists of three entry points: the constructor, `PyTem`, and two methods, `expandString`
 and `expandFile`.  Usage means calling the constructor to obtain a PyTem instance, followed by
@@ -102,7 +107,7 @@ once even if used multiple time with the same PyTem instance.
 For debugging: if the pyfile option is true, then the compiled template (i.e. pure python)
 named "infile" is saved in file, "infile.py", for debugging.
 
-### PyTem API -- The Constructor
+## PyTem API -- The Constructor
 
 A instance of class, **PyTem**, is constructed and used for all subsequent operations.
 A call to the constructor has the following signature:
@@ -127,7 +132,7 @@ The constructor's optional keyword arguments are:
   The `env` option can not be set on the command line.
 
 
-### PyTem API -- Method `expandString`
+## PyTem API -- Method `expandString`
 
 The `expandString` method optionally updates the environment with a list of dictionaries and
 key/value pairs, then expands the `template_string`.  The `infilename` serves as an identifier
@@ -139,7 +144,7 @@ of the string in error messages.
 
 The `expandString` method return the (string) expansion of the `template_string`.
 
-### PyTem API -- Method `expandFile`
+## PyTem API -- Method `expandFile`
 
 The `expandFile` method optionally updates the environment with a list of dictionaries and
 key/value pairs, then expands the file named by `infilename`.  The file is searched for in
@@ -151,7 +156,28 @@ the directories specified in the `search_path` list parameter to the PyTem const
 
 The `expandFile` method return the (string) expansion of the file named by `infilename`.
 
-### Standalone (CLI) Program
+
+## PyTem API -- Method `resetEnv`
+
+```
+    resetEnv(self, new_env)
+```
+
+The way PyTem manages its evaluation environment is unusual, but (we believe) useful and easy
+to understand.
+
+When the PyTem instance is created, a new, empty environment is created, and optionally
+populated by the optional `env` argument to the constructor.
+
+Each time the methods, `expandFile` or `expandString` is called the optional `kv_dicts` and
+`kv_vars` arguments can update the environment. All these environment changes are cumulative:
+they only update or add to the previous environment, but don't replace it, outright.  This
+allows a set of expansions, and files included by `<%include_template ... %>`, to share an
+environment and use it to pass information between templates.
+
+At any point, the `resetEnv` method may be used to reset the environment back to a specific state.
+
+## Standalone (CLI) Program
 
 The installed module, `pytem.py`, can be run from the command line.  An example:
 
@@ -171,8 +197,9 @@ Options
                         0x4000  Show python source
                                 for compiled templates.
                         0x0100  Minor messages
-  -p                    If true, output the compiled template (i.e. pure python)
-                        named "infile" to "infile.py" for debugging.
+  -p                    Output the compiled template (i.e. pure python)
+                        named with ".py" appended, for debugging. For infile,
+                        "myfile.tm" the python file will be "myfile.tm.py".
   (-o | --out)          Out file name. Defaults to '<stdout>' if
                         not specified.
 Expands infiles in order. Keeping environment from one to the next

@@ -2,8 +2,8 @@ from distutils.core import setup
 setup(
     name = "PyTem",
     py_modules=['pytem'],
-    version = "0.0.8",
-    description = "Python-Server-Pages-like Templates",
+    version = "0.0.81",
+    description = "\"Python Server Pages\"-like Templates",
     author = "Steve Beisner",
     author_email = "beisner@alum.mit.edu",
     url = "https://github.com/stevebeisner/PyTem",

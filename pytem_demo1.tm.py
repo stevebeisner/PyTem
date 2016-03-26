@@ -7,7 +7,7 @@ print('Expand "steve" and "mel":')
 #
 print('    steve first: '+str(eval('steve'))+', then mel: '+str(eval(' mel ')))
 print('Expand "tom" and "dick":')
-print('    tom: <%  tom  %>')
+print('    tom: '+str(eval('  tom  ')))
 print('    dick: '+str(eval('dick')))
 print()
 tom = tom.upper()
@@ -25,4 +25,6 @@ for ii in range(1,4):
 
 print(str(eval("include_template('pytem_demo1_incl.tm', sally='Ride')")))
 print('Line with a numeric expr: '+str(eval('100 * 123'))+". That's what!")
+print('% escaped line, not python')
+print('line with <% an escaped %>'+' hole.')
 print('This is the last line.')

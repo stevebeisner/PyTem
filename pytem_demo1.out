@@ -2,7 +2,7 @@ A plain first line.
 Expand "steve" and "mel":
     steve first: beisner, then mel: palacio
 Expand "tom" and "dick":
-    tom: <%  tom  %>
+    tom: Tom Thumb
     dick: Dick Tracy
 
 This is fancy 2016/02/25
@@ -21,4 +21,6 @@ dick is still Dick Tracy.
 sally is Ride.
 ----- Last line of included template.
 Line with a numeric expr: 12300. That's what!
+% escaped line, not python
+line with <% an escaped %> hole.
 This is the last line.

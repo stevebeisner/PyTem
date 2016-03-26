@@ -6,18 +6,17 @@ help:
 	@echo "   demo2           Test expandString."
 	@echo "   demo3           Test command line expansion of two files."
 	@echo "   demo4           Test some other expanString cases."
-	@echo "   sdist           Build a pypi distribution."
+	@echo
+	@echo "   sdist           Build a pypi distribution. NOTE: Update version in setup.py!"
 	@echo "   register_sdist  Register (1st time) and upload (all times) with pypi"
-	@echo "   steve_release   Copy ./pytem.py to ../../lib/python3.5/site-packages/pytem.py"
-	@echo ""
-	@echo "In addition to 'sdict' and 'register_sdict' to release to pypi,"
-	@echo "remember to commit to git:"
-	@echo "   git status"
-	@echo "   git add './*'"
-	@echo '   git commit -a -m "latest changes'
-	@echo "   git status"
-	@echo "   git status"
-	@echo "   git status"
+	@echo "        In addition to 'sdict' and 'register_sdict' to release to pypi,"
+	@echo "        remember to commit to git:"
+	@echo "            git status"
+	@echo "            git add './*'"
+	@echo "            git commit -a -m \"latest changes\""
+	@echo "            git push"
+	@echo
+	@echo "   local_install   Copy ./pytem.py to ../../lib/python3.5/site-packages/pytem.py"
 
 
 
@@ -49,6 +48,6 @@ register_sdist:
 	python setup.py register sdist upload
 
 
-# Local release for testing
-steve_release:
+# Local install the pytem.py module
+local_install:
 	cp ./pytem.py  ../../lib/python3.5/site-packages/pytem.py
