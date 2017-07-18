@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 PyTem is a simple implementation of the Python Server Pages style
 of templating.
@@ -238,7 +239,7 @@ def usage(msg=''):
   sys.stderr.write("  (-o | --out)          Out file name. Defaults to '<stdout>' if\n")
   sys.stderr.write("                        not specified.\n")
   sys.stderr.write("Expands infiles in order. Keeping environment from one to the next\n")
-  sys.stderr.write("If no infiles specified, use <stdin>.\n")
+  sys.stderr.write("If no infiles specified, or if one of the infiles is '-', use <stdin>.\n")
   sys.exit(1)
     
 def run():
@@ -247,7 +248,7 @@ def run():
   '''
   args = sys.argv
   args.pop(0)
-  errout("args list is %r" % (args,))
+  #errout("args list is %r" % (args,))
 
   debug = 0
   search_path = ['.']
@@ -290,7 +291,10 @@ def run():
   else:
     while len(infilenames):
       arg = infilenames.pop(0)
-      outfile.write(pt.expandFile( arg ))
+      if arg == '-':
+        outfile.write(pt.expandFile( '<stdin>' ))
+      else:
+        outfile.write(pt.expandFile( arg ))
   outfile.close()
 
 if __name__ == '__main__':

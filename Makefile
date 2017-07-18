@@ -26,16 +26,19 @@ clean:
 	@rm -f README.html README.txt
 	@rm -rf __pycache__
 
-demo1: clean
+demo1:
 	@python pytem_demo1.py
 
-demo2: clean
+demo2:
 	@python pytem_demo2.py
 
-demo3: clean
+demo3:
 	@python pytem.py -d 0x0100 -o pytem_demo3.out -p pytem_demo3.tm pytem_demo3a.tm
 
-demo4: clean
+demo3A: 
+	@python pytem.py -d 0x0100 -o pytem_demo3A.out -p pytem_demo3.tm - <pytem_demo3a.tm
+
+demo4:
 	@python pytem_demo4.py
 
 sdist: clean
@@ -51,3 +54,9 @@ register_sdist:
 # Local install the pytem.py module
 local_install:
 	cp ./pytem.py  ../../lib/python3.5/site-packages/pytem.py
+	chmod +x ../../lib/python3.5/site-packages/pytem.py
+	cp ./pytem.py  ~/.pyenv/versions/3.5.1/lib/python3.5/site-packages/pytem.py
+	chmod +x  ~/.pyenv/versions/3.5.1/lib/python3.5/site-packages/pytem.py
+	ln -sf ~/.pyenv/versions/3.5.1/lib/python3.5/site-packages/pytem.py ~/bin/pytem
+
+

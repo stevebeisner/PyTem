@@ -203,6 +203,6 @@ Options
   (-o | --out)          Out file name. Defaults to '<stdout>' if
                         not specified.
 Expands infiles in order. Keeping environment from one to the next
-If no infiles specified, use <stdin>.
+If no infiles specified, or if one of the infiles is '-', use <stdin>.
 ```
 

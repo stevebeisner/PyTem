@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
     name = "PyTem",
     py_modules=['pytem'],
-    version = "0.0.81",
+    version = "0.0.82",
     description = "\"Python Server Pages\"-like Templates",
     author = "Steve Beisner",
     author_email = "beisner@alum.mit.edu",
