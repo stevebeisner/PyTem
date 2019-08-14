@@ -4,14 +4,14 @@ PyTem is a simple implementation of the Python Server Pages style
 of templating.
 '''
 
-import sys, re, os
+import sys, re, os, datetime
 from io import StringIO
 
 __all__ = [ 'PyTem' ]
 
 DBG_CODE              = 0x4000    # Dump intermediate (python source for template) to stderr.
 DBG_BASE              = 0x0100    # Minor messages.
-debug_mask = 0
+debug_mask = 0x0000
 def dbg( bits, msg):
   if debug_mask & bits:
     errout( msg)  
@@ -163,6 +163,13 @@ class PyTem:
       (input_path, infile) = self._get_input_path_and_file(infilename)
       text = infile.read()
       infile.close()
+
+      inlines = text.split('\n')
+      for ix in range( len(inlines)):
+        inlines[ix] = re.sub( r'{#}', lambda mo: '%s:%d ' % (infilename,ix+1), inlines[ix])
+        inlines[ix] = re.sub( r'{#DATE}', lambda mo: '%s' % (datetime.date.today().strftime("%Y-%m-%d"),), inlines[ix])
+      text = '\n'.join( inlines)
+
       code_object = self._compileString(text, input_path)
       self.compiled_cache[infilename] = code_object
       return code_object
@@ -178,8 +185,6 @@ class PyTem:
       def include_template( infilename, **arg_kv_vars):
         return self.expandFile(infilename, **arg_kv_vars).rstrip()
       self.env['include_template'] = include_template
-
-
       save_stdout = sys.stdout
       sys.stdout = StringIO()
       exec(code_object, self.env)
@@ -192,7 +197,8 @@ class PyTem:
       "Compile a file and expand."
       dbg(DBG_BASE, "expandFile %r." % infilename)
       code_object = self._compileFile(infilename)
-      return self.expand( code_object, *kv_dicts, **kv_vars)
+      s = self.expand( code_object, *kv_dicts, **kv_vars)
+      return s
 
 
     def expandString(self, 
@@ -227,7 +233,7 @@ def usage(msg=''):
   if(msg):
     sys.stderr.write(msg+'\n')
   sys.stderr.write("Usage:  python pytem.py [options] infile, ...\n")
-  sys.stderr.write("Options\n")
+  sys.stderr.write("Options  (must come before the infiles)\n")
   sys.stderr.write("  (-h | --help          This help message.\n")
   sys.stderr.write("  (-d | --debug)        debug mask bits\n")
   sys.stderr.write("  (-s | --search_path)  path1,path2,...\n")
@@ -248,16 +254,13 @@ def run():
   '''
   args = sys.argv
   args.pop(0)
-  #errout("args list is %r" % (args,))
+  dbg(DBG_BASE, "args list is %r" % (args,))
 
   debug = 0
   search_path = ['.']
   infilenames = []
   outfilename = '<stdout>'
   pyfile = False
-
-  if( len(args) == 0):
-    usage()
 
   while len(args):
     arg = args.pop(0)
@@ -272,8 +275,8 @@ def run():
           pyfile = True
       elif arg == '-o' or arg == '--out':
           outfilename = args.pop(0)
-      else:
-          usage("Unrecognized command line argument, %r" % (arg,))
+      else:  # '-' char w/o flag... input from <stdin>.
+          infilenames.append( '-' )    
     else:                    # non-flag argument (input file name)
       infilenames.append( arg)
       break
@@ -281,20 +284,23 @@ def run():
   while len(args):
     infilenames.append( args.pop(0))
 
+  if( not len(infilenames)):
+    infilenames.append( '-' )    
+
   outfile = ( sys.stdout
               if outfilename == '<stdout>'
               else open(outfilename, 'w'))
 
+  dbg(DBG_BASE, "outfilename is %r" % (outfilename,))
+  dbg(DBG_BASE, "infilenames is %r" % (infilenames,))
+
   pt = PyTem( pyfile=pyfile, search_path=search_path, debug=debug )
-  if len(infilenames) == 0:
-    outfile.write(pt.expandFile( '<stdin>'))
-  else:
-    while len(infilenames):
-      arg = infilenames.pop(0)
-      if arg == '-':
-        outfile.write(pt.expandFile( '<stdin>' ))
-      else:
-        outfile.write(pt.expandFile( arg ))
+  while len(infilenames):
+    arg = infilenames.pop(0)
+    if arg == '-':
+      outfile.write(pt.expandFile( '<stdin>' ))
+    else:
+      outfile.write(pt.expandFile( arg ))
   outfile.close()
 
 if __name__ == '__main__':

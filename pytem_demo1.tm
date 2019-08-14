@@ -1,8 +1,8 @@
 A plain first line.
 %#
 %# Two lines of python comments.
-%steve="beisner"
-%mel="palacio"
+%steve="beisner {#}"
+%mel="palacio {#DATE}"
 Expand "steve" and "mel":
 %#
     steve first: <%steve%>, then mel: <% mel %>

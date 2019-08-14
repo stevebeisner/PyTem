@@ -7,18 +7,24 @@ help:
 	@echo "   demo3           Test command line expansion of two files."
 	@echo "   demo4           Test some other expanString cases."
 	@echo
+	@echo "   gitcommit    		remember to commit to git:"
+	@echo "            					git status"
+	@echo "            					git add './*'"
+	@echo "            					git commit -a -m \"latest changes\""
+	@echo "            					git push"
+	@echo
+	@echo "   local_install   Copy ./pytem.py to ../../lib/python3.5/site-packages/pytem.py"
+	@echo
+	@echo " I haven't been able to get this stuff to work since they changed the API"
+	@echo " to pypi...;  but see:"
+	@echo "				http://peterdowns.com/posts/first-time-with-pypi.html"
+	@echo "	and"
+	@echo "				https://packaging.python.org/tutorials/distributing-packages/#uploading-your-project-to-pypi"
+	@echo
 	@echo "   sdist           Build a pypi distribution. NOTE: Update version in setup.py!"
 	@echo "   register_sdist  Register (1st time) and upload (all times) with pypi"
 	@echo "        In addition to 'sdict' and 'register_sdict' to release to pypi,"
-	@echo "        remember to commit to git:"
-	@echo "            git status"
-	@echo "            git add './*'"
-	@echo "            git commit -a -m \"latest changes\""
-	@echo "            git push"
 	@echo
-	@echo "   local_install   Copy ./pytem.py to ../../lib/python3.5/site-packages/pytem.py"
-
-
 
 clean:
 	@rm -f *.out
@@ -40,6 +46,10 @@ demo3A:
 
 demo4:
 	@python pytem_demo4.py
+
+demo5: 
+	@#./pytem.py pytem_demo5a.tm - <pytem_demo5b.tm >pytem_demo5.txt
+	@./pytem.py pytem_demo5a.tm pytem_demo5b.tm >pytem_demo5.txt
 
 sdist: clean
 	@pandoc -s README.md -o README.txt
