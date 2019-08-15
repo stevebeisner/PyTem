@@ -1,0 +1,14 @@
+To Do For PyTem
+
+x Github repo (PyTem) for the development of PyTem; also package for pip.
+
+x Blog about PyTem
+
+x Doc escape expression "holes": \<% 2+2 %>
+
+x Doc & impl escape for stmts
+
+x Doc GitHub URL
+
++ Realease: github and pypi
+

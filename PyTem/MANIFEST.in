@@ -1,0 +1,4 @@
+include pytem_demo*
+include README.*
+include Makefile
+include LICENSE
